@@ -1,0 +1,73 @@
+version: '3.5'
+services:  
+  mongo1:
+    image: mongo:latest
+    hostname: mongo1
+    container_name: mongo1
+    restart: always 
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1234
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data/db/replica/mongo1:/data/db
+      - ./mongodb.key:/etc/mongodb.key
+    entrypoint:
+      - bash 
+      - -c
+      - |
+          chmod 400 /etc/mongodb.key
+          chown 999:999 /etc/mongodb.key
+          exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet myReplicaSet --keyFile /etc/mongodb.key"
+  mongo2:
+    image: mongo:latest
+    hostname: mongo2
+    container_name: mongo2
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root 
+      MONGO_INITDB_ROOT_PASSWORD: 1234
+    depends_on:
+      - mongo1
+    ports:
+      - 27018:27017
+    volumes:
+      - ./data/db/replica/mongo2:/data/db
+      - ./mongodb.key:/etc/mongodb.key
+    entrypoint:
+      - bash
+      - -c
+      - |
+          chmod 400 /etc/mongodb.key
+          chown 999:999 /etc/mongodb.key
+          exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet myReplicaSet --keyFile /etc/mongodb.key"
+  mongo3:
+    image: mongo:latest
+    hostname: mongo3
+    container_name: mongo3
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 1234
+    depends_on:
+      - mongo2
+    ports:
+      - 27019:27017
+    volumes:
+      - ./data/db/replica/mongo3:/data/db
+      - ./mongodb.key:/etc/mongodb.key
+    entrypoint:
+      - bash
+      - -c
+      - |
+          chmod 400 /etc/mongodb.key
+          chown 999:999 /etc/mongodb.key
+          exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet myReplicaSet --keyFile /etc/mongodb.key"
+networks:
+  default:
+    name: mongoCluster
+        
